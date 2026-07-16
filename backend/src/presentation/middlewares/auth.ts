@@ -25,7 +25,7 @@ export function authMiddleware(
       const header = req.headers.authorization;
 
       if (!header?.startsWith("Bearer ")) {
-        throw new AppError("Missing or invalid authorization header", 401);
+        throw new AppError("Cabeçalho de autorização ausente ou inválido", 401);
       }
 
       const token = header.slice("Bearer ".length);
@@ -49,11 +49,11 @@ export function requireRole(
 ): (req: Request, _res: Response, next: NextFunction) => void {
   return (req, _res, next) => {
     if (!req.user) {
-      return next(new AppError("Unauthorized", 401));
+      return next(new AppError("Não autorizado", 401));
     }
 
     if (!roles.includes(req.user.role)) {
-      return next(new AppError("Forbidden", 403));
+      return next(new AppError("Acesso negado", 403));
     }
 
     next();

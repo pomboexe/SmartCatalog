@@ -10,15 +10,15 @@ export class CreateProductUseCase {
 
   async execute(input: CreateProductInput): Promise<Product> {
     if (!input.name?.trim()) {
-      throw new AppError("name is required", 400);
+      throw new AppError("name é obrigatório", 400);
     }
 
     if (input.price == null || Number.isNaN(Number(input.price))) {
-      throw new AppError("price must be a valid number", 400);
+      throw new AppError("price deve ser um número válido", 400);
     }
 
     if (Number(input.price) < 0) {
-      throw new AppError("price cannot be negative", 400);
+      throw new AppError("price não pode ser negativo", 400);
     }
 
     return this.productRepo.createProduct({

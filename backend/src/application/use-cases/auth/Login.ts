@@ -30,7 +30,7 @@ export class LoginUseCase {
   async execute(input: LoginInput): Promise<LoginResult> {
     const user = await this.userRepo.findByEmail(input.email);
     if (!user) {
-      throw new AppError("Invalid email or password", 401);
+      throw new AppError("E-mail ou senha inválidos", 401);
     }
 
     const passwordMatches = await this.passwordHasher.compare(
@@ -39,7 +39,7 @@ export class LoginUseCase {
     );
 
     if (!passwordMatches) {
-      throw new AppError("Invalid email or password", 401);
+      throw new AppError("E-mail ou senha inválidos", 401);
     }
 
     const token = this.tokenService.sign({

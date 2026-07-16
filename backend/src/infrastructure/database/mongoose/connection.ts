@@ -5,7 +5,7 @@ export async function connectToDatabase(uri: string): Promise<void> {
     await mongoose.connect(uri);
     console.log("Connected to database");
   } catch (error) {
-    console.error("Error connecting to database", error);
-    throw new Error("Failed to connect to database");
+    console.error("Erro ao conectar ao banco de dados", error);
+    throw new Error("Falha ao conectar ao banco de dados");
   }
 }

@@ -11,7 +11,7 @@ export class CreateCompanyUseCase {
   async execute(input: CreateCompanyInput): Promise<Company> {
     const company = await this.companyRepo.findByName(input.name);
     if (company) {
-      throw new AppError("Company already exists", 409);
+      throw new AppError("Empresa já existe", 409);
     }
 
     return this.companyRepo.createCompany(input);

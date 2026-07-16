@@ -15,11 +15,11 @@ export class UpdateProductUseCase {
   ): Promise<Product> {
     if (data.price != null) {
       if (Number.isNaN(Number(data.price))) {
-        throw new AppError("price must be a valid number", 400);
+        throw new AppError("price deve ser um número válido", 400);
       }
 
       if (Number(data.price) < 0) {
-        throw new AppError("price cannot be negative", 400);
+        throw new AppError("price não pode ser negativo", 400);
       }
 
       data = { ...data, price: Number(data.price) };
@@ -28,7 +28,7 @@ export class UpdateProductUseCase {
     const product = await this.productRepo.updateProduct(id, companyId, data);
 
     if (!product) {
-      throw new AppError("Product not found", 404);
+      throw new AppError("Produto não encontrado", 404);
     }
 
     return product;

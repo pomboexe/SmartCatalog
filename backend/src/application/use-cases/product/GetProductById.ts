@@ -9,7 +9,7 @@ export class GetProductByIdUseCase {
     const product = await this.productRepo.findByIdAndCompanyId(id, companyId);
 
     if (!product) {
-      throw new AppError("Product not found", 404);
+      throw new AppError("Produto não encontrado", 404);
     }
 
     return product;

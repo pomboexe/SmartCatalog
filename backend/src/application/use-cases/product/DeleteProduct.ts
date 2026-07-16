@@ -8,7 +8,7 @@ export class DeleteProductUseCase {
     const deleted = await this.productRepo.deleteProduct(id, companyId);
 
     if (!deleted) {
-      throw new AppError("Product not found", 404);
+      throw new AppError("Produto não encontrado", 404);
     }
   }
 }

@@ -13,7 +13,7 @@ export class JwtTokenService implements ITokenService {
   constructor() {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      throw new Error("JWT_SECRET is not defined");
+      throw new Error("JWT_SECRET não está definido");
     }
 
     this.secret = secret;
@@ -46,7 +46,7 @@ export class JwtTokenService implements ITokenService {
         role: decoded.role,
       };
     } catch {
-      throw new AppError("Invalid or expired token", 401);
+      throw new AppError("Token inválido ou expirado", 401);
     }
   }
 }

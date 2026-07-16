@@ -18,6 +18,8 @@ import { JwtTokenService } from "./infrastructure/security/JwtTokenService";
 import { createProductRoutes } from "./presentation/routes/products.routes";
 import { errorHandler } from "./presentation/middlewares/errorHandler";
 import { AppError } from "./shared/errors/AppError";
+import { createCompanyRoutes } from "./presentation/routes/company.routes";
+import { createAuthRoutes } from "./presentation/routes/auth.routes";
 
 dotenv.config();
 
@@ -25,7 +27,7 @@ async function bootstrap() {
   const mongoUri = process.env.MONGODB_URI;
 
   if (!mongoUri) {
-    throw new Error("MONGODB_URI is not defined");
+    throw new Error("MONGODB_URI não está definido");
   }
 
   await connectToDatabase(mongoUri);
@@ -60,55 +62,10 @@ async function bootstrap() {
     res.status(200).json({ message: "OK" });
   });
 
-  app.post("/companies", async (req, res, next) => {
-    try {
-      const company = await createCompany.execute({ name: req.body.name });
-      return res.status(201).json(company);
-    } catch (error) {
-      return next(error);
-    }
-  });
+  app.use("/companies", createCompanyRoutes({ createCompany }));
 
-  app.post("/auth/register", async (req, res, next) => {
-    try {
-      const { name, email, password, companyName } = req.body;
+  app.use("/auth", createAuthRoutes({ register, login }));
 
-      if (!name || !email || !password || !companyName) {
-        throw new AppError(
-          "name, email, password and companyName are required",
-          400,
-        );
-      }
-
-      const result = await register.execute({
-        name,
-        email,
-        password,
-        companyName,
-      });
-
-      return res.status(201).json(result);
-    } catch (error) {
-      return next(error);
-    }
-  });
-
-  app.post("/auth/login", async (req, res, next) => {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        throw new AppError("email and password are required", 400);
-      }
-
-      const result = await login.execute({ email, password });
-      return res.status(200).json(result);
-    } catch (error) {
-      return next(error);
-    }
-  });
-
-  // Rotas de produto: auth + RBAC ficam em products.routes.ts
   app.use(
     "/products",
     createProductRoutes({
@@ -131,6 +88,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  console.error("Failed to start server:", error);
+  console.error("Falha ao iniciar o servidor:", error);
   process.exit(1);
 });

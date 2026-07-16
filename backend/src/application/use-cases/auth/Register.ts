@@ -39,7 +39,7 @@ export class RegisterUseCase {
   async execute(input: RegisterInput): Promise<RegisterResult> {
     const existingUser = await this.userRepo.findByEmail(input.email);
     if (existingUser) {
-      throw new AppError("Email already in use", 409);
+      throw new AppError("E-mail já está em uso", 409);
     }
 
     const createCompany = new CreateCompanyUseCase(this.companyRepo);
