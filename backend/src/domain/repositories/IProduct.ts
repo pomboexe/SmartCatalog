@@ -9,8 +9,25 @@ export interface CreateProductInput {
   companyId: string;
 }
 
+export interface UpdateProductInput {
+  name?: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  imageUrl?: string;
+}
+
 export interface IProductRepository {
   createProduct(input: CreateProductInput): Promise<Product>;
-  findByName(name: string): Promise<Product | null>;
-  findById(id: string): Promise<Product | null>;
+  findByIdAndCompanyId(
+    id: string,
+    companyId: string,
+  ): Promise<Product | null>;
+  findAllByCompanyId(companyId: string): Promise<Product[]>;
+  updateProduct(
+    id: string,
+    companyId: string,
+    data: UpdateProductInput,
+  ): Promise<Product | null>;
+  deleteProduct(id: string, companyId: string): Promise<boolean>;
 }
