@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { CreateCompanyUseCase } from "../../application/use-cases/company/CreateCompany";
-import { AppError } from "../../shared/errors/AppError";
+import { validateBody } from "../middlewares/validate";
+import { createCompanyBodySchema } from "../schemas/company.schemas";
 
 interface CompanyRouteDeps {
   createCompany: CreateCompanyUseCase;
@@ -9,18 +10,18 @@ interface CompanyRouteDeps {
 export function createCompanyRoutes(deps: CompanyRouteDeps): Router {
   const router = Router();
 
-  router.post("/", async (req, res, next) => {
-    try {
-      const { name } = req.body;
-      if (!name) {
-        throw new AppError("name é obrigatório", 400);
+  router.post(
+    "/",
+    validateBody(createCompanyBodySchema),
+    async (req, res, next) => {
+      try {
+        const company = await deps.createCompany.execute(req.body);
+        return res.status(201).json(company);
+      } catch (error) {
+        return next(error);
       }
-      const company = await deps.createCompany.execute({ name });
-      return res.status(201).json(company);
-    } catch (error) {
-      return next(error);
-    }
-  });
+    },
+  );
 
   return router;
 }

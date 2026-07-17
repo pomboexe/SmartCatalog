@@ -38,10 +38,6 @@ export class ChatWithAgentUseCase {
   }
 
   private assertInput(input: ChatWithAgentInput): void {
-    if (!input.message?.trim()) {
-      throw new AppError("message é obrigatório", 400);
-    }
-
     if (!input.companyId) {
       throw new AppError("companyId é obrigatório", 400);
     }
