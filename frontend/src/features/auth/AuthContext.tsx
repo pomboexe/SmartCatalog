@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { User } from "../../types";
+import { queryClient } from "../../lib/queryClient";
 import {
   clearSession,
   getStoredToken,
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSession();
     setToken(null);
     setUser(null);
+    queryClient.clear();
   }, []);
 
   const value = useMemo<AuthContextValue>(

@@ -1,16 +1,19 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "../components/AppLayout";
+import { AuthLayout } from "../components/AuthLayout";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { ChatPage } from "../pages/ChatPage";
 import { DashboardPage } from "../pages/DashboardPage";
-import { LoginPage } from "../pages/LoginPage";
-import { RegisterPage } from "../pages/RegisterPage";
+import { LoginForm } from "../pages/LoginForm";
+import { RegisterForm } from "../pages/RegisterForm";
 
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<AuthLayout />}>
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
+      </Route>
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>

@@ -1,13 +1,16 @@
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "./features/auth/AuthContext";
+import { QueryProvider } from "./app/QueryProvider";
 import { AppRouter } from "./app/router";
+import { AuthProvider } from "./features/auth/AuthContext";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRouter />
-      </AuthProvider>
-    </BrowserRouter>
+    <QueryProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryProvider>
   );
 }

@@ -1,9 +1,23 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0b1f2a;
+  --color-ink-soft: #1a3a4a;
+  --color-mist: #eef3f6;
+  --color-mist-deep: #d9e4ea;
+  --color-teal: #0f766e;
+  --color-teal-bright: #14b8a6;
+  --color-coral: #e11d48;
+}
+
 @layer base {
   body {
-    @apply m-0 min-w-80 min-h-screen bg-slate-950 text-slate-200 antialiased;
-    font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+    @apply m-0 min-w-80 min-h-screen antialiased;
+    font-family: var(--font-body);
+    color: var(--color-ink);
+    background: var(--color-mist);
   }
 
   button:disabled {
@@ -13,4 +27,68 @@
   #root {
     @apply min-h-screen;
   }
+}
+
+@keyframes auth-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes grid-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 48px 48px;
+  }
+}
+
+.auth-rise {
+  animation: auth-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-rise-delay {
+  animation: auth-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.auth-fade {
+  animation: auth-fade 1s ease both;
+}
+
+.auth-grid {
+  background-image:
+    linear-gradient(rgba(11, 31, 42, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 31, 42, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: grid-drift 28s linear infinite;
+}
+
+@keyframes auth-panel-swap {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-panel-swap {
+  animation: auth-panel-swap 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
