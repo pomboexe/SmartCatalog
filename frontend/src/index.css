@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply m-0 min-w-80 min-h-screen bg-slate-950 text-slate-200 antialiased;
+    font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+  }
+
+  button:disabled {
+    @apply opacity-70 cursor-not-allowed;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
