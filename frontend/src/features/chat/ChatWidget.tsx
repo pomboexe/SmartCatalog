@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ApiError } from "../../services/api";
 import { useChatPanel } from "./ChatContext";
-import { useSendChatMessage } from "./useChat";
+import { useStreamChatMessage } from "./useChat";
 
 type ChatMessage = {
   id: string;
@@ -15,7 +15,7 @@ function createId() {
 
 export function ChatWidget() {
   const { isOpen, close, toggle } = useChatPanel();
-  const sendMessage = useSendChatMessage();
+  const streamMessage = useStreamChatMessage();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -26,6 +26,7 @@ export function ChatWidget() {
     },
   ]);
   const [error, setError] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,36 +35,64 @@ export function ChatWidget() {
       top: listRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [messages, isOpen, sendMessage.isPending]);
+  }, [messages, isOpen, isStreaming]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const content = input.trim();
-    if (!content || sendMessage.isPending) return;
+    if (!content || isStreaming) return;
 
     setError("");
     setInput("");
+    setIsStreaming(true);
+
+    const assistantId = createId();
+
     setMessages((current) => [
       ...current,
       { id: createId(), role: "user", content },
+      { id: assistantId, role: "assistant", content: "" },
     ]);
 
     try {
-      const result = await sendMessage.mutateAsync(content);
-      setMessages((current) => [
-        ...current,
-        {
-          id: createId(),
-          role: "assistant",
-          content: result.reply,
+      await streamMessage.mutateAsync({
+        message: content,
+        handlers: {
+          onDelta: (token) => {
+            setMessages((current) =>
+              current.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: msg.content + token }
+                  : msg,
+              ),
+            );
+          },
         },
-      ]);
+      });
+
+      setMessages((current) =>
+        current.map((msg) =>
+          msg.id === assistantId && !msg.content.trim()
+            ? {
+                ...msg,
+                content: "Não consegui gerar uma resposta no momento.",
+              }
+            : msg,
+        ),
+      );
     } catch (err) {
       const message =
         err instanceof ApiError
           ? err.message
           : "Não foi possível enviar a mensagem.";
       setError(message);
+      setMessages((current) =>
+        current.filter(
+          (msg) => !(msg.id === assistantId && !msg.content.trim()),
+        ),
+      );
+    } finally {
+      setIsStreaming(false);
     }
   }
 
@@ -111,24 +140,19 @@ export function ChatWidget() {
                 }`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                     message.role === "user"
                       ? "bg-teal text-mist"
                       : "border border-ink/8 bg-mist text-ink"
                   }`}
                 >
-                  {message.content}
+                  {message.content ||
+                    (isStreaming && message.role === "assistant"
+                      ? "Pensando..."
+                      : "")}
                 </div>
               </div>
             ))}
-
-            {sendMessage.isPending ? (
-              <div className="flex justify-start">
-                <div className="rounded-2xl border border-ink/8 bg-mist px-3.5 py-2.5 text-sm text-ink-soft">
-                  Pensando...
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <form
@@ -146,12 +170,12 @@ export function ChatWidget() {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 placeholder="Pergunte sobre produtos..."
-                disabled={sendMessage.isPending}
+                disabled={isStreaming}
                 className="min-w-0 flex-1 rounded-xl border border-ink/12 bg-mist px-3 py-2.5 text-sm text-ink outline-none transition focus:border-teal focus:ring-2 focus:ring-teal/20"
               />
               <button
                 type="submit"
-                disabled={sendMessage.isPending || !input.trim()}
+                disabled={isStreaming || !input.trim()}
                 className="rounded-xl bg-ink px-3.5 py-2.5 text-sm font-bold text-mist transition hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-70"
               >
                 Enviar

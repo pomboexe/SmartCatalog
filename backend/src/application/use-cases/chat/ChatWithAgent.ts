@@ -1,4 +1,4 @@
-import { ILLMService } from "../../ports/ILLMService";
+import { ChatStreamHandlers, ILLMService } from "../../ports/ILLMService";
 import { AppError } from "../../../shared/errors/AppError";
 
 export interface ChatWithAgentInput {
@@ -14,13 +14,7 @@ export class ChatWithAgentUseCase {
   constructor(private readonly llmService: ILLMService) {}
 
   async execute(input: ChatWithAgentInput): Promise<ChatWithAgentResult> {
-    if (!input.message?.trim()) {
-      throw new AppError("message é obrigatório", 400);
-    }
-
-    if (!input.companyId) {
-      throw new AppError("companyId é obrigatório", 400);
-    }
+    this.assertInput(input);
 
     const reply = await this.llmService.chat(
       input.message.trim(),
@@ -28,5 +22,28 @@ export class ChatWithAgentUseCase {
     );
 
     return { reply };
+  }
+
+  async executeStream(
+    input: ChatWithAgentInput,
+    handlers: ChatStreamHandlers,
+  ): Promise<void> {
+    this.assertInput(input);
+
+    await this.llmService.chatStream(
+      input.message.trim(),
+      input.companyId,
+      handlers,
+    );
+  }
+
+  private assertInput(input: ChatWithAgentInput): void {
+    if (!input.message?.trim()) {
+      throw new AppError("message é obrigatório", 400);
+    }
+
+    if (!input.companyId) {
+      throw new AppError("companyId é obrigatório", 400);
+    }
   }
 }

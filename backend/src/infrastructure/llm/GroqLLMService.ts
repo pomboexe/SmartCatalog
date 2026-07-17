@@ -8,7 +8,10 @@ import {
   IProductRepository,
   SearchProductsFilters,
 } from "../../domain/repositories/IProduct";
-import { ILLMService } from "../../application/ports/ILLMService";
+import {
+  ChatStreamHandlers,
+  ILLMService,
+} from "../../application/ports/ILLMService";
 import { AppError } from "../../shared/errors/AppError";
 
 const SEARCH_PRODUCTS_TOOL: ChatCompletionTool = {
@@ -46,6 +49,18 @@ const SEARCH_PRODUCTS_TOOL: ChatCompletionTool = {
   },
 };
 
+const SYSTEM_PROMPT = [
+  "Você é um assistente de catálogo de produtos.",
+  "Para cumprimentos ou conversa casual, responda direto sem chamar ferramentas.",
+  "Quando a pergunta for sobre produtos, preços, categorias, quantidade ou recomendações, chame search_products.",
+  "Para perguntas gerais ou listagens, chame sem query/category.",
+  "Quando o usuário pedir os mais baratos, use sortBy=price_asc. Quando pedir os mais caros, use sortBy=price_desc.",
+  "Use query só com palavras-chave curtas do produto, nunca a frase completa.",
+  "Nunca invente produtos. Nunca mencione ferramentas ou nomes de function na resposta.",
+  "Responda em português com base só nos dados retornados pela ferramenta quando ela for usada.",
+  "Se a lista vier vazia, diga que não encontrou produtos com esses critérios.",
+].join(" ");
+
 export class GroqLLMService implements ILLMService {
   private readonly client: OpenAI;
   private readonly model: string;
@@ -67,28 +82,40 @@ export class GroqLLMService implements ILLMService {
   }
 
   async chat(message: string, companyId: string): Promise<string> {
-    const messages: ChatCompletionMessageParam[] = [
-      {
-        role: "system",
-        content: [
-          "Você é um assistente de catálogo de produtos.",
-          "Sempre chame search_products antes de responder sobre produtos, preços, categorias, quantidade ou recomendações.",
-          "Para perguntas gerais ou listagens, chame sem query/category.",
-          "Quando o usuário pedir os mais baratos, use sortBy=price_asc. Quando pedir os mais caros, use sortBy=price_desc.",
-          "Use query só com palavras-chave curtas do produto, nunca a frase completa.",
-          "Nunca invente produtos. Nunca mencione ferramentas ou nomes de function na resposta.",
-          "Responda em português com base só nos dados retornados.",
-          "Se a lista vier vazia, diga que não encontrou produtos com esses critérios.",
-        ].join(" "),
+    let reply = "";
+
+    await this.chatStream(message, companyId, {
+      onToken: (token) => {
+        reply += token;
       },
+    });
+
+    return (
+      reply.trim() || "Não consegui gerar uma resposta no momento."
+    );
+  }
+
+  async chatStream(
+    message: string,
+    companyId: string,
+    handlers: ChatStreamHandlers,
+  ): Promise<void> {
+    const messages: ChatCompletionMessageParam[] = [
+      { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: message },
     ];
 
     try {
-      return await this.runWithTools(messages, companyId);
+      await this.runWithTools(messages, companyId, handlers);
     } catch (error) {
       if (this.isToolUseFailed(error)) {
-        return this.recoverFromFailedToolCall(error, message, companyId);
+        await this.recoverFromFailedToolCall(
+          error,
+          message,
+          companyId,
+          handlers,
+        );
+        return;
       }
 
       if (error instanceof AppError) {
@@ -106,16 +133,14 @@ export class GroqLLMService implements ILLMService {
   private async runWithTools(
     messages: ChatCompletionMessageParam[],
     companyId: string,
-  ): Promise<string> {
+    handlers: ChatStreamHandlers,
+  ): Promise<void> {
     for (let round = 0; round < this.maxToolRounds; round++) {
       const completion = await this.client.chat.completions.create({
         model: this.model,
         messages,
         tools: [SEARCH_PRODUCTS_TOOL],
-        tool_choice:
-          round === 0
-            ? { type: "function", function: { name: "search_products" } }
-            : "none",
+        tool_choice: "auto",
         temperature: 0.2,
       });
 
@@ -128,10 +153,11 @@ export class GroqLLMService implements ILLMService {
       const toolCalls = choice.tool_calls;
 
       if (!toolCalls?.length) {
-        return (
+        const text =
           choice.content?.trim() ||
-          "Não consegui gerar uma resposta no momento."
-        );
+          "Não consegui gerar uma resposta no momento.";
+        await handlers.onToken(text);
+        return;
       }
 
       messages.push({
@@ -157,16 +183,50 @@ export class GroqLLMService implements ILLMService {
           content: result,
         });
       }
+
+      // Depois das tools, streameia a resposta final
+      await this.streamFinalAnswer(messages, handlers);
+      return;
     }
 
     throw new AppError("Limite de tool calls excedido", 502);
+  }
+
+  private async streamFinalAnswer(
+    messages: ChatCompletionMessageParam[],
+    handlers: ChatStreamHandlers,
+  ): Promise<void> {
+    const stream = await this.client.chat.completions.create({
+      model: this.model,
+      messages,
+      tools: [SEARCH_PRODUCTS_TOOL],
+      tool_choice: "none",
+      temperature: 0.2,
+      stream: true,
+    });
+
+    let full = "";
+
+    for await (const chunk of stream) {
+      const token = chunk.choices[0]?.delta?.content;
+      if (!token) continue;
+      full += token;
+      await handlers.onToken(token);
+    }
+
+    if (!full.trim()) {
+      await handlers.onToken(
+        "Não consegui gerar uma resposta no momento.",
+      );
+    }
   }
 
   private async recoverFromFailedToolCall(
     error: unknown,
     userMessage: string,
     companyId: string,
-  ): Promise<string> {
+    handlers: ChatStreamHandlers,
+  ): Promise<void> {
     const filters = this.sanitizeFilters(
       this.parseFailedGenerationFilters(error) ?? {},
     );
@@ -177,9 +237,10 @@ export class GroqLLMService implements ILLMService {
       companyId,
     );
 
-    const completion = await this.client.chat.completions.create({
+    const stream = await this.client.chat.completions.create({
       model: this.model,
       temperature: 0.2,
+      stream: true,
       messages: [
         {
           role: "system",
@@ -201,10 +262,20 @@ export class GroqLLMService implements ILLMService {
       ],
     });
 
-    return (
-      completion.choices[0]?.message.content?.trim() ||
-      "Encontrei produtos, mas não consegui montar a resposta."
-    );
+    let full = "";
+
+    for await (const chunk of stream) {
+      const token = chunk.choices[0]?.delta?.content;
+      if (!token) continue;
+      full += token;
+      await handlers.onToken(token);
+    }
+
+    if (!full.trim()) {
+      await handlers.onToken(
+        "Encontrei produtos, mas não consegui montar a resposta.",
+      );
+    }
   }
 
   private isToolUseFailed(error: unknown): boolean {
@@ -256,7 +327,6 @@ export class GroqLLMService implements ILLMService {
     };
   }
 
-  /** Descarta query longa demais (frase conversacional), sem listas de palavras. */
   private sanitizeQuery(query?: string): string | undefined {
     if (!query?.trim()) return undefined;
 
@@ -294,7 +364,6 @@ export class GroqLLMService implements ILLMService {
     let filters: SearchProductsFilters = {};
 
     try {
-      // companyId NUNCA vem dos args da LLM — só do JWT
       filters = this.sanitizeFilters(this.parseToolArguments(rawArguments));
     } catch {
       filters = {};
