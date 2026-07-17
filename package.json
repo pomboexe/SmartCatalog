@@ -1,0 +1,10 @@
+{
+  "name": "smartcatalog",
+  "private": true,
+  "scripts": {
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down"
+  }
+}

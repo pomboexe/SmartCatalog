@@ -48,12 +48,12 @@ export class MongooseProductRepository implements IProductRepository {
       ];
     }
 
-    const sort =
+    const sort: Record<string, 1 | -1> =
       filters.sortBy === "price_asc"
-        ? { price: 1 as const }
+        ? { price: 1 }
         : filters.sortBy === "price_desc"
-          ? { price: -1 as const }
-          : { createdAt: -1 as const };
+          ? { price: -1 }
+          : { createdAt: -1 };
 
     const docs = await ProductModel.find(filter).sort(sort).limit(20);
 

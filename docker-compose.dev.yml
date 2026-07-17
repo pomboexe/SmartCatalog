@@ -1,0 +1,79 @@
+# Desenvolvimento — hot reload (tsx watch + Vite)
+# Uso: docker compose -f docker-compose.dev.yml up --build
+# App: http://localhost:5173 | API: http://localhost:3333
+
+name: smartcatalog-dev
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data_dev:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  seed:
+    build:
+      context: ./backend
+      target: build
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/smartcatalog
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: npm run seed
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      target: development
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3333}:3333"
+    environment:
+      PORT: 3333
+      MONGODB_URI: mongodb://mongo:27017/smartcatalog
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/scripts:/app/scripts
+      - ./backend/tsconfig.json:/app/tsconfig.json:ro
+      - ./backend/package.json:/app/package.json:ro
+    depends_on:
+      mongo:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3333}
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+      - ./frontend/package.json:/app/package.json:ro
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data_dev:
