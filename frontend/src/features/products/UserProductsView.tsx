@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import { useChatPanel } from "../chat/ChatContext";
 import type { Product } from "../../types";
 import { ProductCard } from "./ProductCard";
 import { ProductFilters } from "./ProductFilters";
@@ -14,6 +14,7 @@ export function UserProductsView({
   products,
   isFetching = false,
 }: UserProductsViewProps) {
+  const { open } = useChatPanel();
   const {
     search,
     setSearch,
@@ -39,9 +40,9 @@ export function UserProductsView({
           </p>
         </div>
 
-        <Link to="/chat">
-          <Button type="button">Perguntar para a IA</Button>
-        </Link>
+        <Button type="button" onClick={open}>
+          Perguntar para a IA
+        </Button>
       </div>
 
       <ProductFilters

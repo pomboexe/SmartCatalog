@@ -48,9 +48,14 @@ export class MongooseProductRepository implements IProductRepository {
       ];
     }
 
-    const docs = await ProductModel.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(20);
+    const sort =
+      filters.sortBy === "price_asc"
+        ? { price: 1 as const }
+        : filters.sortBy === "price_desc"
+          ? { price: -1 as const }
+          : { createdAt: -1 as const };
+
+    const docs = await ProductModel.find(filter).sort(sort).limit(20);
 
     return docs.map((doc) => this.toDomain(doc));
   }

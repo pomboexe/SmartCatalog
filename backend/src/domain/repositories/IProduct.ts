@@ -21,6 +21,7 @@ export interface SearchProductsFilters {
   query?: string;
   category?: string;
   maxPrice?: number;
+  sortBy?: "price_asc" | "price_desc";
 }
 
 export interface IProductRepository {
