@@ -71,7 +71,14 @@ export function ProductCard({
               {isDeleting ? "Excluindo..." : "Excluir"}
             </Button>
           </div>
-        ) : null}
+        ) : (
+          <div className="rounded-xl border border-ink/8 bg-mist/70 px-3 py-2.5">
+            <p className="text-sm font-semibold text-ink">Disponível no catálogo</p>
+            <p className="mt-0.5 text-xs text-ink-soft/75">
+              Pergunte no chat para recomendações
+            </p>
+          </div>
+        )}
       </div>
     </article>
   );

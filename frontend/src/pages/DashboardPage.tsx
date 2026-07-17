@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../features/auth/AuthContext";
 import { ProductCard } from "../features/products/ProductCard";
+import { ProductFilters } from "../features/products/ProductFilters";
 import { ProductForm } from "../features/products/ProductForm";
+import { UserProductsView } from "../features/products/UserProductsView";
+import { useProductFilters } from "../features/products/useProductFilters";
 import {
   useCreateProduct,
   useDeleteProduct,
@@ -22,6 +25,18 @@ export function DashboardPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const formPanelRef = useRef<HTMLDivElement>(null);
+
+  const catalog = products ?? [];
+  const {
+    search,
+    setSearch,
+    category,
+    setCategory,
+    categories,
+    filteredProducts,
+    hasActiveFilters,
+    clearFilters,
+  } = useProductFilters(catalog);
 
   const showForm = isCreating || Boolean(editing);
   const formPending = createProduct.isPending || updateProduct.isPending;
@@ -102,6 +117,28 @@ export function DashboardPage() {
         ? "Falha ao carregar produtos"
         : "";
 
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-ink/8 bg-surface-muted p-8 text-sm text-ink-soft/75">
+        Carregando produtos...
+      </div>
+    );
+  }
+
+  if (listErrorMessage) {
+    return (
+      <div className="rounded-2xl border border-coral/20 bg-coral/10 p-4 text-sm text-coral">
+        {listErrorMessage}
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <UserProductsView products={catalog} isFetching={isFetching} />
+    );
+  }
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -110,22 +147,19 @@ export function DashboardPage() {
             Produtos
           </h1>
           <p className="mt-1 text-ink-soft/75">
-            Catálogo da sua empresa
-            {isAdmin
-              ? " — você pode criar, editar e excluir."
-              : " — visualização somente leitura."}
-            {isFetching && !isLoading ? " · atualizando..." : null}
+            Catálogo da sua empresa — você pode criar, editar e excluir.
+            {isFetching ? " · atualizando..." : null}
           </p>
         </div>
 
-        {isAdmin && !showForm ? (
+        {!showForm ? (
           <Button type="button" onClick={openCreate}>
             Novo produto
           </Button>
         ) : null}
       </div>
 
-      {showForm && isAdmin ? (
+      {showForm ? (
         <div ref={formPanelRef} className="scroll-mt-6">
           <ProductForm
             initialProduct={editing}
@@ -137,38 +171,56 @@ export function DashboardPage() {
         </div>
       ) : null}
 
-      {isLoading ? (
-        <div className="rounded-2xl border border-ink/8 bg-surface-muted p-8 text-sm text-ink-soft/75">
-          Carregando produtos...
-        </div>
+      {catalog.length > 0 ? (
+        <ProductFilters
+          search={search}
+          category={category}
+          categories={categories}
+          resultCount={filteredProducts.length}
+          categoryCount={categories.length}
+          onSearchChange={setSearch}
+          onCategoryChange={setCategory}
+        />
       ) : null}
 
-      {listErrorMessage ? (
-        <div className="rounded-2xl border border-coral/20 bg-coral/10 p-4 text-sm text-coral">
-          {listErrorMessage}
-        </div>
-      ) : null}
-
-      {!isLoading && !listErrorMessage && (products?.length ?? 0) === 0 ? (
+      {catalog.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-ink/15 bg-surface-soft p-8 text-center">
           <p className="font-display text-lg font-bold text-ink">
             Nenhum produto ainda
           </p>
           <p className="mt-1 text-sm text-ink-soft/75">
-            {isAdmin
-              ? "Clique em “Novo produto” para popular o catálogo."
-              : "Peça a um admin para cadastrar itens."}
+            Clique em “Novo produto” para popular o catálogo.
           </p>
         </div>
       ) : null}
 
-      {!isLoading && !listErrorMessage && (products?.length ?? 0) > 0 ? (
+      {catalog.length > 0 && filteredProducts.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-ink/15 bg-surface-soft p-8 text-center">
+          <p className="font-display text-lg font-bold text-ink">
+            Nenhum resultado
+          </p>
+          <p className="mt-1 text-sm text-ink-soft/75">
+            Tente outro termo ou limpe os filtros.
+          </p>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              className="mt-4 text-sm font-semibold text-teal underline-offset-4 hover:underline"
+              onClick={clearFilters}
+            >
+              Limpar filtros
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {filteredProducts.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {products!.map((product) => (
+          {filteredProducts.map((product) => (
             <ProductCard
               key={product._id}
               product={product}
-              isAdmin={isAdmin}
+              isAdmin
               onEdit={openEdit}
               onDelete={handleDelete}
               isDeleting={
