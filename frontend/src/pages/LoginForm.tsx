@@ -1,10 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import {
-  authButtonClass,
-  authFieldClass,
-  authLabelClass,
-} from "../features/auth/authStyles";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 import { useLoginMutation } from "../features/auth/useAuthMutations";
 import { ApiError } from "../services/api";
 
@@ -14,7 +11,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  async function handleSubmit(event: FormEvent) {
+  function handleSubmit(event: FormEvent) {
     event.preventDefault();
     loginMutation.mutate({ email, password });
   }
@@ -38,29 +35,25 @@ export function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-4">
-        <label className={authLabelClass}>
-          E-mail
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={authFieldClass}
-            autoComplete="email"
-            required
-          />
-        </label>
+        <Input
+          label="E-mail"
+          type="email"
+          name="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
 
-        <label className={authLabelClass}>
-          Senha
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={authFieldClass}
-            autoComplete="current-password"
-            required
-          />
-        </label>
+        <Input
+          label="Senha"
+          type="password"
+          name="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
 
         {errorMessage ? (
           <p className="rounded-lg bg-coral/10 px-3 py-2 text-sm text-coral">
@@ -68,13 +61,9 @@ export function LoginForm() {
           </p>
         ) : null}
 
-        <button
-          type="submit"
-          className={authButtonClass}
-          disabled={loginMutation.isPending}
-        >
+        <Button type="submit" disabled={loginMutation.isPending}>
           {loginMutation.isPending ? "Entrando..." : "Entrar no catálogo"}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-sm text-ink-soft/75">

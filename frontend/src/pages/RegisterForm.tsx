@@ -1,10 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import {
-  authButtonClass,
-  authFieldClass,
-  authLabelClass,
-} from "../features/auth/authStyles";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 import { useRegisterMutation } from "../features/auth/useAuthMutations";
 import { ApiError } from "../services/api";
 
@@ -16,7 +13,7 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
 
-  async function handleSubmit(event: FormEvent) {
+  function handleSubmit(event: FormEvent) {
     event.preventDefault();
     registerMutation.mutate({ name, email, password, companyName });
   }
@@ -40,49 +37,41 @@ export function RegisterForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-4">
-        <label className={authLabelClass}>
-          Nome da empresa
-          <input
-            value={companyName}
-            onChange={(event) => setCompanyName(event.target.value)}
-            className={authFieldClass}
-            required
-          />
-        </label>
+        <Input
+          label="Nome da empresa"
+          name="companyName"
+          value={companyName}
+          onChange={(event) => setCompanyName(event.target.value)}
+          required
+        />
 
-        <label className={authLabelClass}>
-          Seu nome
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className={authFieldClass}
-            required
-          />
-        </label>
+        <Input
+          label="Seu nome"
+          name="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+        />
 
-        <label className={authLabelClass}>
-          E-mail
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={authFieldClass}
-            autoComplete="email"
-            required
-          />
-        </label>
+        <Input
+          label="E-mail"
+          type="email"
+          name="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+          required
+        />
 
-        <label className={authLabelClass}>
-          Senha
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={authFieldClass}
-            autoComplete="new-password"
-            required
-          />
-        </label>
+        <Input
+          label="Senha"
+          type="password"
+          name="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+          required
+        />
 
         {errorMessage ? (
           <p className="rounded-lg bg-coral/10 px-3 py-2 text-sm text-coral">
@@ -90,13 +79,9 @@ export function RegisterForm() {
           </p>
         ) : null}
 
-        <button
-          type="submit"
-          className={authButtonClass}
-          disabled={registerMutation.isPending}
-        >
+        <Button type="submit" disabled={registerMutation.isPending}>
           {registerMutation.isPending ? "Criando..." : "Criar catálogo"}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-6 text-sm text-ink-soft/75">
