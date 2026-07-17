@@ -17,6 +17,12 @@ export interface UpdateProductInput {
   imageUrl?: string;
 }
 
+export interface SearchProductsFilters {
+  query?: string;
+  category?: string;
+  maxPrice?: number;
+}
+
 export interface IProductRepository {
   createProduct(input: CreateProductInput): Promise<Product>;
   findByIdAndCompanyId(
@@ -24,6 +30,10 @@ export interface IProductRepository {
     companyId: string,
   ): Promise<Product | null>;
   findAllByCompanyId(companyId: string): Promise<Product[]>;
+  searchByCompanyId(
+    companyId: string,
+    filters: SearchProductsFilters,
+  ): Promise<Product[]>;
   updateProduct(
     id: string,
     companyId: string,

@@ -13,13 +13,15 @@ import { ListProductsUseCase } from "./application/use-cases/product/ListProduct
 import { GetProductByIdUseCase } from "./application/use-cases/product/GetProductById";
 import { UpdateProductUseCase } from "./application/use-cases/product/UpdateProduct";
 import { DeleteProductUseCase } from "./application/use-cases/product/DeleteProduct";
+import { ChatWithAgentUseCase } from "./application/use-cases/chat/ChatWithAgent";
 import { BcryptPasswordHasher } from "./infrastructure/security/BcryptPasswordHasher";
 import { JwtTokenService } from "./infrastructure/security/JwtTokenService";
+import { GroqLLMService } from "./infrastructure/llm/GroqLLMService";
 import { createProductRoutes } from "./presentation/routes/products.routes";
-import { errorHandler } from "./presentation/middlewares/errorHandler";
-import { AppError } from "./shared/errors/AppError";
 import { createCompanyRoutes } from "./presentation/routes/company.routes";
 import { createAuthRoutes } from "./presentation/routes/auth.routes";
+import { createChatRoutes } from "./presentation/routes/chat.routes";
+import { errorHandler } from "./presentation/middlewares/errorHandler";
 
 dotenv.config();
 
@@ -42,6 +44,7 @@ async function bootstrap() {
   const productRepo = new MongooseProductRepository();
   const passwordHasher = new BcryptPasswordHasher();
   const tokenService = new JwtTokenService();
+  const llmService = new GroqLLMService(productRepo);
 
   const createCompany = new CreateCompanyUseCase(companyRepo);
   const register = new RegisterUseCase(
@@ -57,6 +60,7 @@ async function bootstrap() {
   const getProductById = new GetProductByIdUseCase(productRepo);
   const updateProduct = new UpdateProductUseCase(productRepo);
   const deleteProduct = new DeleteProductUseCase(productRepo);
+  const chatWithAgent = new ChatWithAgentUseCase(llmService);
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ message: "OK" });
@@ -74,6 +78,14 @@ async function bootstrap() {
       getProductById,
       updateProduct,
       deleteProduct,
+      tokenService,
+    }),
+  );
+
+  app.use(
+    "/chat",
+    createChatRoutes({
+      chatWithAgent,
       tokenService,
     }),
   );

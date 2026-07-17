@@ -2,6 +2,7 @@ import { Product } from "../../../domain/entities/Product";
 import {
   CreateProductInput,
   IProductRepository,
+  SearchProductsFilters,
   UpdateProductInput,
 } from "../../../domain/repositories/IProduct";
 import { ProductModel } from "../schemas/ProductSchema";
@@ -22,6 +23,35 @@ export class MongooseProductRepository implements IProductRepository {
 
   async findAllByCompanyId(companyId: string): Promise<Product[]> {
     const docs = await ProductModel.find({ companyId }).sort({ createdAt: -1 });
+    return docs.map((doc) => this.toDomain(doc));
+  }
+
+  async searchByCompanyId(
+    companyId: string,
+    filters: SearchProductsFilters,
+  ): Promise<Product[]> {
+    const filter: Record<string, unknown> = { companyId };
+
+    if (filters.category?.trim()) {
+      filter.category = { $regex: filters.category.trim(), $options: "i" };
+    }
+
+    if (filters.maxPrice != null && !Number.isNaN(Number(filters.maxPrice))) {
+      filter.price = { $lte: Number(filters.maxPrice) };
+    }
+
+    if (filters.query?.trim()) {
+      const query = filters.query.trim();
+      filter.$or = [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ];
+    }
+
+    const docs = await ProductModel.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(20);
+
     return docs.map((doc) => this.toDomain(doc));
   }
 
