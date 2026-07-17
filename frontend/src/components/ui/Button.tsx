@@ -1,11 +1,26 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+type ButtonVariant = "primary" | "secondary" | "danger";
 
-export function Button({ className = "", children, ...props }: ButtonProps) {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+};
+
+const variantClass: Record<ButtonVariant, string> = {
+  primary: "bg-ink text-mist hover:bg-ink-soft",
+  secondary: "border border-ink/12 bg-surface text-ink hover:bg-mist",
+  danger: "bg-coral text-mist hover:bg-coral/90",
+};
+
+export function Button({
+  className = "",
+  variant = "primary",
+  children,
+  ...props
+}: ButtonProps) {
   return (
     <button
-      className={`mt-2 w-full rounded-xl bg-ink px-4 py-3.5 font-display text-sm font-bold tracking-wide text-white transition hover:bg-ink-soft active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 ${className}`}
+      className={`rounded-xl px-4 py-3 font-display text-sm font-bold tracking-wide transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70 ${variantClass[variant]} ${className}`}
       {...props}
     >
       {children}

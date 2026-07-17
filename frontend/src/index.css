@@ -1,20 +1,55 @@
 @import "tailwindcss";
 
+:root {
+  --ink: #0b1f2a;
+  --ink-soft: #1a3a4a;
+  --mist: #eef3f6;
+  --mist-deep: #d9e4ea;
+  --teal: #0f766e;
+  --teal-bright: #14b8a6;
+  --coral: #e11d48;
+  --surface: #ffffff;
+  --surface-muted: rgba(255, 255, 255, 0.8);
+  --surface-soft: rgba(255, 255, 255, 0.6);
+  --grid-line: rgba(11, 31, 42, 0.045);
+  --glow-top: rgba(255, 255, 255, 0.7);
+  --shadow-panel: rgba(11, 31, 42, 0.35);
+}
+
+.dark {
+  --ink: #e8eef2;
+  --ink-soft: #a8b8c4;
+  --mist: #0b1220;
+  --mist-deep: #121a24;
+  --teal: #2dd4bf;
+  --teal-bright: #5eead4;
+  --coral: #fb7185;
+  --surface: #121a24;
+  --surface-muted: rgba(18, 26, 36, 0.88);
+  --surface-soft: rgba(18, 26, 36, 0.65);
+  --grid-line: rgba(232, 238, 242, 0.06);
+  --glow-top: rgba(11, 18, 32, 0.75);
+  --shadow-panel: rgba(0, 0, 0, 0.55);
+}
+
 @theme {
   --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --color-ink: #0b1f2a;
-  --color-ink-soft: #1a3a4a;
-  --color-mist: #eef3f6;
-  --color-mist-deep: #d9e4ea;
-  --color-teal: #0f766e;
-  --color-teal-bright: #14b8a6;
-  --color-coral: #e11d48;
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-mist: var(--mist);
+  --color-mist-deep: var(--mist-deep);
+  --color-teal: var(--teal);
+  --color-teal-bright: var(--teal-bright);
+  --color-coral: var(--coral);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-soft: var(--surface-soft);
 }
 
 @layer base {
   body {
-    @apply m-0 min-w-80 min-h-screen antialiased;
+    @apply m-0 min-w-80 min-h-screen antialiased transition-colors duration-300;
     font-family: var(--font-body);
     color: var(--color-ink);
     background: var(--color-mist);
@@ -72,8 +107,8 @@
 
 .auth-grid {
   background-image:
-    linear-gradient(rgba(11, 31, 42, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(11, 31, 42, 0.045) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 48px 48px;
   animation: grid-drift 28s linear infinite;
 }
@@ -91,4 +126,20 @@
 
 .auth-panel-swap {
   animation: auth-panel-swap 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.app-shell {
+  min-height: 100vh;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.14), transparent 38%),
+    linear-gradient(180deg, #f4f8fa 0%, #e8eff2 45%, #dce6ea 100%);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.dark .app-shell {
+  color: #e5e7eb;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 35%),
+    linear-gradient(180deg, #0f172a 0%, #111827 45%, #0b1220 100%);
 }

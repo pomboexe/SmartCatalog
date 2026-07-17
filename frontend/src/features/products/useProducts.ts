@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../features/auth/AuthContext";
-import { queryKeys } from "../lib/queryKeys";
+import { useAuth } from "../auth/AuthContext";
+import { queryKeys } from "../../lib/queryKeys";
 import {
   createProduct,
   deleteProduct,
   listProducts,
   updateProduct,
-} from "../services/productService";
-import type { CreateProductInput, UpdateProductInput } from "../types";
+} from "../../services/productService";
+import type { CreateProductInput, UpdateProductInput } from "../../types";
 
 export function useProducts() {
   const { token } = useAuth();

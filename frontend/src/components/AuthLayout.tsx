@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function AuthLayout() {
   const { isAuthenticated } = useAuth();
@@ -15,7 +16,11 @@ export function AuthLayout() {
         <div className="auth-grid absolute inset-0" />
         <div className="absolute -left-24 top-[-10%] h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(20,184,166,0.22),transparent_65%)]" />
         <div className="absolute bottom-[-20%] right-[-10%] h-[32rem] w-[32rem] rounded-full bg-[radial-gradient(circle,rgba(11,31,42,0.1),transparent_70%)]" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/70 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[var(--glow-top)] to-transparent" />
+      </div>
+
+      <div className="absolute top-4 right-4 z-20 sm:top-6 sm:right-6">
+        <ThemeToggle />
       </div>
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 px-6 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:px-10 lg:py-16">
@@ -34,7 +39,7 @@ export function AuthLayout() {
         </section>
 
         <section className="auth-rise-delay w-full max-w-md justify-self-end">
-          <div className="rounded-2xl border border-ink/8 bg-white/80 p-7 shadow-[0_24px_60px_-32px_rgba(11,31,42,0.35)] backdrop-blur-md sm:p-8">
+          <div className="rounded-2xl border border-ink/8 bg-surface-muted p-7 shadow-[0_24px_60px_-32px_var(--shadow-panel)] backdrop-blur-md sm:p-8">
             <div key={location.pathname} className="auth-panel-swap">
               <Outlet />
             </div>

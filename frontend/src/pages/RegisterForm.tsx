@@ -79,7 +79,11 @@ export function RegisterForm() {
           </p>
         ) : null}
 
-        <Button type="submit" disabled={registerMutation.isPending}>
+        <Button
+          type="submit"
+          className="mt-2 w-full"
+          disabled={registerMutation.isPending}
+        >
           {registerMutation.isPending ? "Criando..." : "Criar catálogo"}
         </Button>
       </form>
