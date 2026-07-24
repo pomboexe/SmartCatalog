@@ -214,3 +214,9 @@ Chat stream → fetch + ReadableStream (SSE) → atualiza bubble token a token
 3. **Chat widget + SSE** — UX moderna e bônus de streaming sem complexidade de WebSocket.
 4. **Zod na borda** — contrato da API explícito; use cases focam em regra de negócio (404, 409, etc.).
 5. **Dois Compose (dev/prod)** — demonstrar ambiente local e imagem otimizada sem misturar concerns.
+
+---
+
+## License
+
+Este projeto está sob a licença [MIT](./LICENSE).
